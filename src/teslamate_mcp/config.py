@@ -75,6 +75,19 @@ class Settings(BaseSettings):
         ),
     )
 
+    mqtt_host: str | None = Field(
+        default=None,
+        description=(
+            "TeslaMate MQTT broker host (e.g. mosquitto). When set, registers the "
+            "read-only get_live_vehicle_status tool (retained MQTT state; never wakes the car)."
+        ),
+    )
+    mqtt_port: int = Field(default=1883, ge=1, le=65535)
+    mqtt_namespace: str = Field(default="", description="TeslaMate MQTT_NAMESPACE, if any.")
+    mqtt_username: str | None = Field(default=None)
+    mqtt_password: SecretStr | None = Field(default=None)
+    live_status_timeout_s: float = Field(default=4.0, gt=0, le=30)
+
     map_tiles: bool = Field(
         default=True,
         description=(

@@ -23,6 +23,7 @@ from .tools import (
     discover_predefined_tools,
     register_charging_write_tools,
     register_custom_sql,
+    register_live_status_tool,
     register_predefined_tools,
     register_schema_tool,
 )
@@ -122,14 +123,25 @@ def create_server(settings: Settings) -> MCPServer:
     )
     if settings.enable_charging_writes:
         register_charging_write_tools(mcp)
+    if settings.mqtt_host:
+        register_live_status_tool(
+            mcp,
+            host=settings.mqtt_host,
+            port=settings.mqtt_port,
+            namespace=settings.mqtt_namespace,
+            timeout_s=settings.live_status_timeout_s,
+            username=settings.mqtt_username,
+            password=settings.mqtt_password.get_secret_value() if settings.mqtt_password else None,
+        )
     register_resources(mcp, tools)
     register_prompts(mcp)
     logger.info(
         "Registered %d predefined tools + run_sql + get_database_schema + "
-        "%s (MCP Apps)%s + resources + prompts",
+        "%s (MCP Apps)%s%s + resources + prompts",
         len(tools),
         "/".join(spec.tool_name for spec in APP_SPECS),
         " + set_charging_cost (writes ENABLED)" if settings.enable_charging_writes else "",
+        " + get_live_vehicle_status (MQTT, read-only)" if settings.mqtt_host else "",
     )
 
     # Exposed for process-shutdown hooks (cli.py) and test teardown.
