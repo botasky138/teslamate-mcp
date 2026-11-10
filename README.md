@@ -218,6 +218,10 @@ GRANT UPDATE (cost) ON charging_processes TO teslamate_ro;
 
 This grant is the security boundary. The tool cannot write anything else. On clients with MCP elicitation, the user confirms each write in a dialog. `run_sql` stays read-only in all cases.
 
+### Live vehicle status (opt-in, fork addition)
+
+Set `MQTT_HOST` (e.g. `mosquitto`) to register `get_live_vehicle_status(car_id=1)`. It reads TeslaMate's *retained* MQTT topics (`teslamate/cars/<id>/#`) and returns lock state, sentry mode, windows, doors, trunk/frunk, live charging, climate, TPMS and software-update fields that the database does not store. It only subscribes to the broker (never publishes), never contacts Tesla, and so cannot wake or command the car; values are TeslaMate's last-known state. Stdlib only, no new dependencies.
+
 ## Configuration
 
 The server reads all settings from environment variables. It also reads a `.env` file. Only `DATABASE_URL` is required.
@@ -238,6 +242,10 @@ The server reads all settings from environment variables. It also reads a `.env`
 | `REPORT_TIMEZONE`       | `UTC`       | IANA timezone for report buckets                            |
 | `MAP_TILES`             | `true`      | Interactive basemap under the route, trip, places, and roads maps (CARTO tiles; Esri as fallback) |
 | `ENABLE_CHARGING_WRITES`| `false`     | Registers `set_charging_cost`                               |
+| `MQTT_HOST`             | _empty_     | TeslaMate MQTT broker; registers read-only `get_live_vehicle_status` |
+| `MQTT_PORT` / `MQTT_NAMESPACE` | `1883` / _empty_ | Broker port; TeslaMate `MQTT_NAMESPACE` if set |
+| `MQTT_USERNAME` / `MQTT_PASSWORD` | _empty_ | Broker credentials, if the broker requires them |
+| `LIVE_STATUS_TIMEOUT_S` | `4`         | Max seconds to collect retained messages                    |
 | `LOG_LEVEL`             | `INFO`      | Python log level                                            |
 | `DEBUG`                 | `false`     | Starlette debug mode; keep off in production                |
 
